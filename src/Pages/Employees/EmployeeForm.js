@@ -25,7 +25,9 @@ const initialFValues ={
 
 }
 
-function EmployeeForm(props) {
+export default function EmployeeForm(props) {
+
+    const {addorEdit, recordforEdit} = props;
 
     const validate =(fieldValues = values)=> {
         let temp = {...errors}
@@ -59,9 +61,19 @@ function EmployeeForm(props) {
     const handleSubmit = e => {
 
         e.preventDefault()
-        if (validate())
-        employService.insertEmployee(values)
+        if (validate()) {
+            addorEdit(values, resetForm ); 
+        }
+        
     }
+
+    useEffect (() => {
+        if (recordforEdit != null)
+        setValues({
+            ...recordforEdit //... operator properties from recordforEdit can be part of {} object 
+                             //and same will be updated into values object
+        })
+    }, [recordforEdit])
 
     return (
         <Form onSubmit={handleSubmit}> 
@@ -152,4 +164,3 @@ function EmployeeForm(props) {
     );
 }
 
-export default EmployeeForm;

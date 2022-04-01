@@ -1,12 +1,17 @@
 import { Paper, makeStyles, TableBody, TableRow, TableCell, Toolbar, InputAdornment } from '@material-ui/core';
 import { PeopleOutlineTwoTone, Search } from '@material-ui/icons';
-import React, { useState  } from 'react';
+import React, { useState,useEffect  } from 'react';
 import PageHeader from '../../Components/PageHeader';
 import EmployeeForm from './EmployeeForm';
 import useTable from '../../Components/useTable';
 import * as employService from '../../Services/employService'
 import Controls from '../../Components/Controls/Controls'
 import { search } from '@material-ui/icons';
+import AddIcon from '@material-ui/icons/Add';
+import Popup, { } from '../../Components/Popup';
+import EditOutlinedIcon from '@material-ui/icons/EditOutlined';
+import CloseIcon from '@material-ui/icons/Close';
+
 
 const usestyles = makeStyles(theme => ({
     pageContent: {
@@ -15,6 +20,10 @@ const usestyles = makeStyles(theme => ({
     },
     searchInput: {
         width: '75%'
+    },
+    newButton: {
+        position: 'absolute',
+        right: '10px'
     }
 }))
 
@@ -22,13 +31,17 @@ const headCells = [
     {id:'fullName', label:'Employee Name'},
     {id:'email', label:'Email Address (Personal)'},
     {id:'mobile', label:'Mobile Number'},
-    {id:'department', label:'Department',disableSorting:true}   
+    {id:'department', label:'Department'},
+    {id:'actions', label:'Actions',disableSorting:true}  
 ]   
 
 function Employees(props) {
     const classes = usestyles();
+    const [recordforEdit, setRecordforEdit] = useState(null);
+    const [user, setUser] = useState(null);
     const [records, setRecords] = useState(employService.getAllEmployees());
-    const [filterFn, setFilterFn] = useState({ fn: items => { return items; } })
+    const [filterFn, setFilterFn] = useState({ fn: items => { return items; } });
+    const [openPopup, setOpenPopup] = useState(false);
 
     const {
         TblContainer,
@@ -50,6 +63,36 @@ function Employees(props) {
         })
     }
 
+
+    // useEffect(() => {
+    //     var z 
+    //     fetch('https://jsonplaceholder.typicode.com/todos/1')
+    //         .then(response => response.json())
+    //         .then(a => setUser(a))
+    //   },[]);
+
+
+      useEffect(() => {
+        console.log(user?.title)
+      },[user]);
+    
+
+    const addorEdit = (employee, resetForm) => {
+        if (employee.id == 0)          // then we will do insert operation
+             employService.insertEmployee(employee)
+        else
+            employService.updateEmployee(employee)
+        resetForm()
+        setRecordforEdit(null)
+        setOpenPopup(false)
+        setRecords(employService.getAllEmployees())
+    }
+
+    const openInPopup = item => {
+        setRecordforEdit(item)
+        setOpenPopup(true)
+    }
+
     return (
         <>
         <PageHeader 
@@ -58,7 +101,7 @@ function Employees(props) {
          icon={<PeopleOutlineTwoTone fontSize="large" />}
              />
              <Paper className={classes.pageContent}> 
-        {/* <EmployeeForm /> */}
+       
         <Toolbar>
             <Controls.Input
             label="Search Employees"
@@ -68,8 +111,15 @@ function Employees(props) {
                     <Search />
                     </InputAdornment>)
             }}
-            onChange={handleSearch}
+            onChange={  handleSearch}
             />
+        <Controls.Button
+            text = "Add New"
+            variant = "outlined"
+            startIcon = {<AddIcon />}
+            className ={classes.newButton}
+            onClick = {() => {setOpenPopup(true); setRecordforEdit(null);}}
+        />
 
         </Toolbar>
         <TblContainer>
@@ -82,6 +132,17 @@ function Employees(props) {
                         <TableCell>{item.email}</TableCell>
                         <TableCell>{item.mobile}</TableCell>
                         <TableCell>{item.department}</TableCell>
+                        <TableCell>
+                            <Controls.ActionButton
+                            color="primary"> 
+                                <EditOutlinedIcon fontSize="small"
+                                onClick = {() => {openInPopup(item)}} /> 
+                            </Controls.ActionButton>
+                            <Controls.ActionButton
+                            color="secondary"> 
+                                <CloseIcon fontSize="small" /> 
+                            </Controls.ActionButton>
+                        </TableCell>
                     </TableRow>))
                 }
 
@@ -90,6 +151,15 @@ function Employees(props) {
         </TblContainer>
         <TblPagination />
         </Paper>
+        <Popup
+            title="Employee Form"
+            openPopup={openPopup}
+            setOpenPopup={setOpenPopup}
+            >
+             <EmployeeForm 
+             recordforEdit={recordforEdit}
+             addorEdit={addorEdit}/>
+        </Popup>
         </>
     );
 }
