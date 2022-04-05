@@ -11,6 +11,8 @@ import AddIcon from '@material-ui/icons/Add';
 import Popup, { } from '../../Components/Popup';
 import EditOutlinedIcon from '@material-ui/icons/EditOutlined';
 import CloseIcon from '@material-ui/icons/Close';
+import Notification from '../../Components/Notification';
+import ConfirmDialog from '../../Components/Controls/ConfirmDialog';
 
 
 const usestyles = makeStyles(theme => ({
@@ -42,6 +44,8 @@ function Employees(props) {
     const [records, setRecords] = useState(employService.getAllEmployees());
     const [filterFn, setFilterFn] = useState({ fn: items => { return items; } });
     const [openPopup, setOpenPopup] = useState(false);
+    const [notify, setNotify] = useState ({isOpen:false, message:'', type:''});
+    const [confirmDialog, setConfirmDialog] = useState ({isOpen:false, title:'', subTitle:''});
 
     const {
         TblContainer,
@@ -86,9 +90,29 @@ function Employees(props) {
         setRecordforEdit(null)
         setOpenPopup(false)
         setRecords(employService.getAllEmployees())
+        setNotify ({
+            isOpen:true,
+            message:'submitted successfully',
+            type: 'success'
+        })
     }
 
-    const openInPopup = item => {
+    const onDelete = id => {
+        setConfirmDialog ({
+            ...confirmDialog,
+            isOpen: false,
+        
+        })
+        employService.deleteEmployee(id);
+        setRecords(employService.getAllEmployees()) 
+        setNotify ({
+            isOpen:true,
+            message:'Deleted successfully',
+            type: 'error'
+        })
+     }
+
+    const openInPopup = item => { 
         setRecordforEdit(item)
         setOpenPopup(true)
     }
@@ -118,7 +142,7 @@ function Employees(props) {
             variant = "outlined"
             startIcon = {<AddIcon />}
             className ={classes.newButton}
-            onClick = {() => {setOpenPopup(true); setRecordforEdit(null);}}
+            onClick = {() => {setOpenPopup(true); setRecordforEdit(null); }}
         />
 
         </Toolbar>
@@ -134,13 +158,21 @@ function Employees(props) {
                         <TableCell>{item.department}</TableCell>
                         <TableCell>
                             <Controls.ActionButton
-                            color="primary"> 
-                                <EditOutlinedIcon fontSize="small"
-                                onClick = {() => {openInPopup(item)}} /> 
+                                color="primary"> 
+                                    <EditOutlinedIcon fontSize="small"
+                                    onClick = {() => {openInPopup(item)}} /> 
                             </Controls.ActionButton>
                             <Controls.ActionButton
-                            color="secondary"> 
-                                <CloseIcon fontSize="small" /> 
+                                color="secondary"
+                                onClick={() => {
+                                    setConfirmDialog ({
+                                    isOpen:true,
+                                    title:'Are you sure you want to delete this record?',
+                                    subTitle:"You cant undo this operation",
+                                    onConfirm: () => { onDelete(item.id) }
+                                    })
+                                }}> 
+                                    <CloseIcon fontSize="small" /> 
                             </Controls.ActionButton>
                         </TableCell>
                     </TableRow>))
@@ -160,6 +192,14 @@ function Employees(props) {
              recordforEdit={recordforEdit}
              addorEdit={addorEdit}/>
         </Popup>
+        <Notification 
+            notify={notify}
+            setNotify={setNotify}
+            /> 
+        <ConfirmDialog 
+        confirmDialog={confirmDialog}
+        setConfirmDialog={setConfirmDialog}
+        />
         </>
     );
 }

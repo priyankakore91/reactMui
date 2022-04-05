@@ -47,3 +47,8 @@ export function getAllEmployees(data) {
         }))
 }
 
+export function deleteEmployee(id) {
+    let employees = getAllEmployees();
+    employees = employees.filter(x=> x.id != id )
+    localStorage.setItem(KEYS.employees, JSON.stringify(employees));
+}
